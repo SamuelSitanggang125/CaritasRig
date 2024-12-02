@@ -54,7 +54,8 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.thechance101.chart)
+    implementation (libs.news.api.java)
     implementation(platform(libs.firebase.bom))
     implementation(libs.google.firebase.auth)
     implementation(libs.gson)
@@ -83,6 +84,10 @@ dependencies {
     implementation(libs.androidx.compose.material)
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -107,5 +112,15 @@ dependencies {
 
 
     implementation(libs.androidx.navigation.compose)
+
+    //pager
+    implementation (libs.accompanist.pager)
+    implementation (libs.accompanist.pager.indicators)
+
+    implementation (libs.mpandroidchart)
+
+
+
+
 
 }
