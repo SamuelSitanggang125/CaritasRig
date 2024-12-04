@@ -3,6 +3,8 @@ package com.superbgoal.caritasrig.navbar
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,12 +16,15 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Compare
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -27,6 +32,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -69,19 +75,21 @@ import com.superbgoal.caritasrig.ComposableScreen.homepage.homepage.HomeScreen2
 import com.superbgoal.caritasrig.ComposableScreen.homepage.homepage.NewsArticleScreen
 import com.superbgoal.caritasrig.ComposableScreen.homepage.profile.ProfileScreen
 import com.superbgoal.caritasrig.ComposableScreen.homepage.settings.AboutUsScreen
-import com.superbgoal.caritasrig.ComposableScreen.homepage.settings.SettingsScreen
 import com.superbgoal.caritasrig.ComposableScreen.homepage.settings.profilesettings.ProfileSettingsScreen
+import com.superbgoal.caritasrig.ComposableScreen.homepage.settings.profilesettings.ProfileSettingsViewModel
 import com.superbgoal.caritasrig.ComposableScreen.homepage.sharedBuild.BuildListItem
 import com.superbgoal.caritasrig.ComposableScreen.homepage.sharedBuild.SharedBuildScreen
 import com.superbgoal.caritasrig.data.model.User
 
 @Composable
 fun NavbarHost(
-    homeViewModel: HomeViewModel = viewModel(),
-    buildViewModel: BuildViewModel = viewModel(),
     appController: NavController,
-    ) {
+) {
+    val homeViewModel: HomeViewModel = viewModel()
+    val buildViewModel: BuildViewModel = viewModel()
+    val profileViewModel: ProfileSettingsViewModel = viewModel()
     val navController = rememberNavController()
+    val buildTitle by buildViewModel.buildTitle.observeAsState("")
     var selectedItem by remember { mutableIntStateOf(0) }
 
     Scaffold(
@@ -100,11 +108,11 @@ fun NavbarHost(
                 "settings" -> "Settings"
                 "about_us" -> "About Us"
                 "profile_settings" -> stringResource(id = R.string.profile_settings)
-                "trending" -> "Trending"
+                "compare" -> "Compare"
                 "build" -> "Build"
                 "benchmark" -> "Benchmark"
                 "favorite" -> "Favorite Component"
-                "build_details" -> "Building :3"
+                "build_details" -> {buildTitle.ifEmpty { "New Build" }}
                 else -> "CaritasRig"
             }
             Log.d("NavbarHost", "Current Route: $currentRoute")
@@ -127,7 +135,9 @@ fun NavbarHost(
                 isSpecificRoute = isSpecificRoute,
                 onBackClick = {
                     navController.popBackStack()
-                }
+                },
+                currentRoute = currentRoute,
+                buildViewModel = buildViewModel
             )
         },
 
@@ -150,19 +160,13 @@ fun NavbarHost(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("home") {
-                HomeScreen2(navController = navController)
+                HomeScreen2(navController = navController,buildViewModel)
             }
             composable("profile/{username}") {
-                ProfileScreen(homeViewModel = homeViewModel)
-            }
-            composable("settings") {
-                SettingsScreen(navController,appController)
+                ProfileScreen(homeViewModel = homeViewModel,appController=appController,navController=navController)
             }
             composable("about_us") {
                 AboutUsScreen()
-            }
-            composable("trending") {
-                SharedBuildScreen()
             }
             composable("compare") {
                 ComparisonScreen()
@@ -194,7 +198,10 @@ fun NavbarHost(
             composable("memory_screen") { MemoryScreen(navController) }
             composable("news_article_screen") { NewsArticleScreen()}
             composable("profile_settings"){
-                ProfileSettingsScreen ()
+                ProfileSettingsScreen (homeViewModel = homeViewModel, viewModel = profileViewModel)
+            }
+            composable("shared_build_screen"){
+                SharedBuildScreen()
             }
         }
     }
@@ -208,17 +215,18 @@ fun AppTopBar(
     onBackClick: () -> Unit = {},
     isProfileScreen: Boolean = false,
     isSpecificRoute: Boolean = false,
-    title: String
+    title: String,
+    currentRoute: String?,
+    buildViewModel: BuildViewModel
 ) {
     val user by homeViewModel.user.collectAsState(initial = null)
-    val navbarColor = Color(0xFF473947);
+    val navbarColor = Color(0xFF473947)
     TopAppBar(
         backgroundColor = navbarColor,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-
             ) {
                 // Tampilkan tombol back jika berada di specific route atau profile screen
                 if (isSpecificRoute || isProfileScreen) {
@@ -230,45 +238,103 @@ fun AppTopBar(
                         )
                     }
                 }
-                Text(text = title, fontSize = 20.sp)
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    modifier = Modifier.weight(1f) // Berikan weight agar title tidak tertindih
+                )
             }
         },
         actions = {
-            if (isSpecificRoute) {
-                // Tidak menampilkan aksi tambahan pada specific route (bisa diubah jika diperlukan)
-            } else if (isProfileScreen) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Icon Settings
-                    IconButton(onClick = { navigateToSettings() }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings Icon",
-                            modifier = Modifier.size(28.dp)
-                        )
+            when {
+                isSpecificRoute -> {
+                    // Tidak menampilkan aksi tambahan pada specific route (bisa diubah jika diperlukan)
+                }
+                isProfileScreen -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Icon Settings
+                        IconButton(onClick = { navigateToSettings() }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings Icon",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
                     }
                 }
-            } else {
-                // Jika bukan di halaman profil, tampilkan icon profil
-                IconButton(onClick = { navigateToProfile(user) }) {
-                    if (user?.profileImageUrl != null) {
-                        AsyncImage(
-                            model = user?.profileImageUrl,
-                            contentDescription = "Profile",
-                            modifier = Modifier
-                                .size(35.dp)
-                                .clip(CircleShape),
-                            placeholder = painterResource(id = R.drawable.baseline_person_24),
-                            error = painterResource(id = R.drawable.baseline_person_24)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.AccountCircle,
-                            contentDescription = "Default Profile Icon",
-                            modifier = Modifier.size(35.dp)
-                        )
+                currentRoute == "build_details" -> {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            modifier = Modifier.fillMaxHeight(),
+                            onClick = {
+                                buildViewModel.setNewBuildState(true)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Build Icon",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        IconButton(
+                            modifier = Modifier.fillMaxHeight(),
+                            onClick = {
+                                buildViewModel.setShareDialogState(true)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        IconButton(onClick = { navigateToProfile(user) }) {
+                            if (user?.profileImageUrl != null) {
+                                AsyncImage(
+                                    model = user?.profileImageUrl,
+                                    contentDescription = "Profile",
+                                    modifier = Modifier
+                                        .size(35.dp)
+                                        .clip(CircleShape),
+                                    placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                    error = painterResource(id = R.drawable.baseline_person_24)
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Default Profile Icon",
+                                    modifier = Modifier.size(35.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    // Jika bukan di halaman profil, tampilkan icon profil
+                    IconButton(onClick = { navigateToProfile(user) }) {
+                        if (user?.profileImageUrl != null) {
+                            AsyncImage(
+                                model = user?.profileImageUrl,
+                                contentDescription = "Profile",
+                                modifier = Modifier
+                                    .size(35.dp)
+                                    .clip(CircleShape),
+                                placeholder = painterResource(id = R.drawable.baseline_person_24),
+                                error = painterResource(id = R.drawable.baseline_person_24)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Default Profile Icon",
+                                modifier = Modifier.size(35.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -307,7 +373,7 @@ fun BottomNavigationBar(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) Color.White else Color.Gray,
+                        tint = if (isSelected) Color.Black else Color.Gray,
                         modifier = Modifier.size(if (isSelected) 30.dp else 24.dp)
                     )
                 },
@@ -347,12 +413,9 @@ fun currentRoute(navController: NavController): String? {
 
 sealed class NavigationItem(val route: String, val icon: ImageVector, val title: String) {
     data object Home : NavigationItem("home", Icons.Default.Home, "Home")
-    data object Trending : NavigationItem("trending", Icons.Default.TrendingUp, "Trending")
+    data object Trending : NavigationItem("compare", Icons.Default.Compare, "Compare")
     data object Build : NavigationItem("build", Icons.Default.DesktopWindows, "Build")
     data object Benchmark : NavigationItem("benchmark", Icons.Default.BarChart, "Benchmark")
     data object Favorite : NavigationItem("favorite", Icons.Default.Favorite, "Favorite")
 }
-
-
-
 

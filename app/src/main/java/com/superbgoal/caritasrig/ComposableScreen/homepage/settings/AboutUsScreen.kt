@@ -95,6 +95,12 @@ fun ProfileCard(
 
 @Composable
 fun AboutUsScreen() {
+    Image(
+        painter = painterResource(id = R.drawable.component_bg),
+        contentDescription = null,
+        contentScale = ContentScale.FillBounds,
+        modifier = Modifier.fillMaxSize()
+    )
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -104,6 +110,7 @@ fun AboutUsScreen() {
         // Judul
         Text(
             text = "About Us",
+            color = Color.White,
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -114,8 +121,8 @@ fun AboutUsScreen() {
         ) {
             item {
                 ProfileCard(
-                    imageRes = R.drawable.profile1,
-                    name = "Hotbaen Eliezer",
+                    imageRes = R.drawable.hotbaennotsigma,
+                    name = "Hotbaen Eliezer\n(Project Manager)",
                     instagram = "@exaudi._",
                     github = "exaudi26",
                     email = "eliezerstmrg@gmail.com"
@@ -124,7 +131,7 @@ fun AboutUsScreen() {
             item {
                 ProfileCard(
                     imageRes = R.drawable.profile2,
-                    name = "Ferry Sirait",
+                    name = "Ferry Sirait \n(Designer)",
                     instagram = "@ferry_srt",
                     github = "ferrysrt",
                     email = "ferrypb123pb123@gmail.com"
@@ -133,7 +140,7 @@ fun AboutUsScreen() {
             item {
                 ProfileCard(
                     imageRes = R.drawable.profile3,
-                    name = "Richard Hasibuan",
+                    name = "Richard Hasibuan \n(Back-end)",
                     instagram = "@ricathsb",
                     github = "ricathsb",
                     email = "ricat1907111@gmail.com"
@@ -142,7 +149,7 @@ fun AboutUsScreen() {
             item {
                 ProfileCard(
                     imageRes = R.drawable.profile4,
-                    name = "Samuel Sitanggang",
+                    name = "Samuel Sitanggang \n(Front-end)",
                     instagram = "@samuel_bryan_ps",
                     github = "SamuelSitanggang125",
                     email = "samuelsitanggang04@gmail.com"
